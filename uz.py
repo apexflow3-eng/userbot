@@ -3,38 +3,15 @@
 class Userbot:
     """
     .uz <text>
-    Reply + .uz
-    Avtomatik O‘zbekchaga tarjima
+    (test modul – loader ishlashini tekshiradi)
     """
 
     def __init__(self, client):
         self.client = client
 
-    async def uzcmd(self, message):  # ⚠️ MUHIM: uzcmd
-        try:
-            from googletrans import Translator
+    async def uzcmd(self, message):
+        text = message.text.split(maxsplit=1)
+        if len(text) < 2:
+            return await message.edit("🇺🇿 Test ishladi")
 
-            translator = Translator()
-
-            args = message.text.split(maxsplit=1)
-            reply = await message.get_reply_message()
-
-            if reply and reply.text:
-                text = reply.text
-            elif len(args) > 1:
-                text = args[1]
-            else:
-                return await message.edit(
-                    "❌ Tarjima uchun matn yo‘q\nReply + .uz yoki .uz matn"
-                )
-
-            await message.edit("🇺🇿 Tarjima qilinmoqda...")
-
-            result = translator.translate(text, src="auto", dest="uz")
-
-            await message.edit(
-                f"🇺🇿 O‘zbekcha tarjima:\n\n{result.text}"
-            )
-
-        except Exception as e:
-            await message.edit(f"❌ Xatolik: {e}")
+        await message.edit(f"🇺🇿 Test matn:\n\n{text[1]}")
