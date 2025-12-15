@@ -1,45 +1,43 @@
 # -*- coding: utf-8 -*-
 
 import io
-from PIL import Image
-import pytesseract
+from gtts import gTTS
 
+class TTSModule:
+    """Matn → Ovoz (Text to Speech)"""
 
-class OCRModule:
-    """Rasm ichidagi matnni o‘qish (OCR)"""
+    async def ttscmd(self, message):
+        """Matnni ovozli xabarga aylantiradi"""
 
-    async def orccmd(self, message):
-        """Rasmga reply qilib matnni o‘qib beradi"""
+        text = None
 
-        if not message.is_reply:
-            return await message.edit("❌ Rasmga reply qilib `.ocr` yoz")
+        if message.is_reply:
+            reply = await message.get_reply_message()
+            if reply and reply.text:
+                text = reply.text
+        else:
+            parts = message.text.split(maxsplit=1)
+            if len(parts) > 1:
+                text = parts[1]
 
-        reply = await message.get_reply_message()
+        if not text:
+            return await message.edit("❌ `.tts matn` yoki reply matn")
 
-        if not reply.photo:
-            return await message.edit("❌ Reply qilingan xabar rasm emas")
-
-        await message.edit("🖼 OCR qilinmoqda...")
-
-        img_bytes = io.BytesIO()
-        await reply.download_media(file=img_bytes)
-        img_bytes.seek(0)
+        await message.edit("🔊 Ovoz yaratilmoqda...")
 
         try:
-            image = Image.open(img_bytes)
-            text = pytesseract.image_to_string(image, lang="eng+rus")
+            tts = gTTS(text=text, lang="uz")
+            audio = io.BytesIO()
+            tts.write_to_fp(audio)
+            audio.seek(0)
+            audio.name = "tts.ogg"
 
-            if not text.strip():
-                return await message.edit("❌ Matn topilmadi")
-
-            if len(text) > 4000:
-                text = text[:4000] + "..."
-
-            await message.edit(
-                "📝 <b>OCR natija:</b>\n\n"
-                f"<code>{text}</code>",
-                parse_mode="html"
+            await message.delete()
+            await message.client.send_file(
+                message.chat_id,
+                audio,
+                voice_note=True
             )
 
         except Exception as e:
-            await message.edit(f"❌ Xatolik: <code>{e}</code>", parse_mode="html")
+            await message.edit(f"❌ Xatolik: `{e}`")
